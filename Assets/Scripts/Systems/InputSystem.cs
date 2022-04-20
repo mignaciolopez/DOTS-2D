@@ -10,10 +10,10 @@ public class InputSystem : ComponentSystem
     {
         Entities
             .WithAll<ControllableComponent>()
-            .ForEach((ref Translation translation) =>
+            .ForEach((ref Translation translation, ref SpeedComponent speed) =>
         {
-            translation.Value.x += Input.GetAxisRaw("Horizontal") * Time.DeltaTime;
-            translation.Value.y += Input.GetAxisRaw("Vertical") * Time.DeltaTime;
+            translation.Value.x += Input.GetAxisRaw("Horizontal") * speed.Value * Time.DeltaTime;
+            translation.Value.y += Input.GetAxisRaw("Vertical") * speed.Value * Time.DeltaTime;
         });
     }
 }

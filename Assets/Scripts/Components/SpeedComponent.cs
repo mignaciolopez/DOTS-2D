@@ -4,7 +4,7 @@ using UnityEngine;
 using Unity.Entities;
 
 [GenerateAuthoringComponent]
-public struct ControllableComponent : IComponentData
+public struct SpeedComponent : IComponentData
 {
-    
+    public float Value;
 }

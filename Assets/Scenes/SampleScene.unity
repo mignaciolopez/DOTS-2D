@@ -299,7 +299,7 @@ GameObject:
   - component: {fileID: 1070731751}
   - component: {fileID: 1070731750}
   m_Layer: 0
-  m_Name: GraphicsLoader
+  m_Name: GameGraphics
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -317,7 +317,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7c0c0d54d11a18499d6833a472a93c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  someSpriteRenderer: {fileID: 768762614}
+  sprites: []
 --- !u!4 &1070731751
 Transform:
   m_ObjectHideFlags: 0

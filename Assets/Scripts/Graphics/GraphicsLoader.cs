@@ -205,6 +205,6 @@ public class GraphicsLoader : MonoBehaviour
         loadTime = Time.realtimeSinceStartup - startTime;
         Debug.Log($"Overall Load time: {loadTime.ToString("F2")}s.");
 
-        someSpriteRenderer.sprite = sprites[229];
+        someSpriteRenderer.sprite = sprites[300];
     }
 }

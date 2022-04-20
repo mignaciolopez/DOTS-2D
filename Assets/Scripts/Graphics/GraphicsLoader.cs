@@ -5,9 +5,15 @@ using UnityEngine;
 
 public class GraphicsLoader : MonoBehaviour
 {
-    SortedDictionary<System.UInt32, Data> m_graphicsData;
+    [SerializeField] SpriteRenderer someSpriteRenderer;
 
-    struct Data
+    //public static GameGraphics gameGraphics { private set; get }
+
+    SortedDictionary<System.UInt32, IndexData> indexes;
+    SortedDictionary<System.UInt32, Texture2D> textures;
+    List<Sprite> sprites;
+
+    struct IndexData
     {
         public System.UInt32 id;
 
@@ -24,12 +30,13 @@ public class GraphicsLoader : MonoBehaviour
     };
 
     BinaryReader br;
+    System.UInt32 graphicsCount;
 
-    float startTime;
+    float startTime, taskStartTime;
 
     private void Start()
     {
-        m_graphicsData = new SortedDictionary<System.UInt32, Data>();
+        indexes = new SortedDictionary<System.UInt32, IndexData>();
 
         TextAsset indexAsset = Resources.Load<TextAsset>("Index");
 
@@ -44,27 +51,26 @@ public class GraphicsLoader : MonoBehaviour
             return;
         }
 
-
-
         startTime = Time.realtimeSinceStartup;
-        StartCoroutine(Load());
+        taskStartTime = Time.realtimeSinceStartup;
+        StartCoroutine(LoadIndex());
     }
 
-    private IEnumerator Load()
+    private IEnumerator LoadIndex()
     {
         yield return new WaitForSeconds(0f);
 
         int fileVersion = br.ReadInt32();
         Debug.Log($"FileVersion: {fileVersion}");
 
-        System.UInt32 graphicsCount = br.ReadUInt32();
+        graphicsCount = br.ReadUInt32();
         Debug.Log($"graphicsCount: {graphicsCount}");
 
         System.UInt32 index = 0;
 
         while (index != graphicsCount)
         {
-            Data dat = new Data();
+            IndexData dat = new IndexData();
             dat.frames = new List<System.UInt32>();
 
             index = br.ReadUInt32();
@@ -79,14 +85,14 @@ public class GraphicsLoader : MonoBehaviour
                     dat.frames.Add(f);
                 }
 
-                dat.id = m_graphicsData[dat.frames[0]].id;
+                dat.id = indexes[dat.frames[0]].id;
                 dat.speed = br.ReadSingle();
-                dat.startX = m_graphicsData[dat.frames[0]].startX;
-                dat.startY = m_graphicsData[dat.frames[0]].startY;
-                dat.width = m_graphicsData[dat.frames[0]].width;
-                dat.height = m_graphicsData[dat.frames[0]].height;
-                dat.tileWidth = m_graphicsData[dat.frames[0]].tileWidth;
-                dat.tileHeight = m_graphicsData[dat.frames[0]].tileHeight;
+                dat.startX = indexes[dat.frames[0]].startX;
+                dat.startY = indexes[dat.frames[0]].startY;
+                dat.width = indexes[dat.frames[0]].width;
+                dat.height = indexes[dat.frames[0]].height;
+                dat.tileWidth = indexes[dat.frames[0]].tileWidth;
+                dat.tileHeight = indexes[dat.frames[0]].tileHeight;
             }
             else
             {
@@ -103,7 +109,7 @@ public class GraphicsLoader : MonoBehaviour
                 dat.speed = 0.0f;
             }
 
-            m_graphicsData.Add(index, dat);
+            indexes.Add(index, dat);
             /*
 			Debug.Log(
 				$"Graphic Data: \n" +
@@ -121,7 +127,84 @@ public class GraphicsLoader : MonoBehaviour
 			*/
         }
 
-        float loadTime = Time.realtimeSinceStartup - startTime;
+        float loadTime = Time.realtimeSinceStartup - taskStartTime;
         Debug.Log($"Index Load time: {loadTime.ToString("F2")}s.");
+
+        taskStartTime = Time.realtimeSinceStartup;
+        StartCoroutine(LoadTextures());
+    }
+
+    private IEnumerator LoadTextures()
+    {
+        yield return new WaitForSeconds(0f);
+
+        textures = new SortedDictionary<System.UInt32, Texture2D>();
+
+        foreach (KeyValuePair<System.UInt32, IndexData> indexData in indexes)
+        {
+            Texture2D texture2D = Resources.Load<Texture2D>("Images/" + indexData.Value.id.ToString());
+
+            if (texture2D != null)
+            {
+                if (!textures.ContainsKey(indexData.Value.id))
+                    textures.Add(indexData.Value.id, texture2D);
+            }
+            else
+                Debug.LogWarning($"Unable to Load: Images/{indexData.Value.id}");
+        }
+
+        if (textures.Count < 1)
+            Debug.LogError("Error Loading Textures");
+        else
+        {
+            float loadTime = Time.realtimeSinceStartup - taskStartTime;
+            Debug.Log(
+                $"Textures Count {textures.Count} \n" +
+                $"Textures Load time: {loadTime.ToString("F2")}s.");
+        }
+
+        taskStartTime = Time.realtimeSinceStartup;
+        StartCoroutine(LoadSprites());
+    }
+
+    private IEnumerator LoadSprites()
+    {
+        yield return new WaitForSeconds(0f);
+
+        sprites = new List<Sprite>();
+
+        foreach(KeyValuePair<System.UInt32, IndexData> indexData in indexes)
+        {
+            Rect rect = new Rect(indexData.Value.startX, indexData.Value.startY, indexData.Value.width, indexData.Value.height);
+            //Vector2 pivot = new Vector2(rect.width / 2f, rect.height / 2f);
+            Vector2 pivot = new Vector2(0.5f, 0.5f);
+
+            Sprite sprite = Sprite.Create(textures[indexData.Value.id], rect, pivot);
+
+            if (sprite)
+                sprites.Add(sprite);
+            else
+                Debug.LogWarning(
+                    $"Unable to create Sprite: " +
+                    $"Images/{indexData.Value.id} " +
+                    $"Rect: {rect.ToString()}");
+        }
+
+        float loadTime;
+
+        if (sprites.Count < 1)
+            Debug.LogError("Error Creating Sprites");
+        else
+        {
+            loadTime = Time.realtimeSinceStartup - taskStartTime;
+            Debug.Log(
+                $"Sprites Count {textures.Count} \n" +
+                $"Sprites Creation time: {loadTime.ToString("F2")}s.");
+        }
+
+        loadTime = Time.realtimeSinceStartup - startTime;
+        Debug.Log($"Overall Load time: {loadTime.ToString("F2")}s.");
+
+        someSpriteRenderer.sprite = sprites[229];
     }
 }

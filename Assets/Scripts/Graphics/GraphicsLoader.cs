@@ -30,6 +30,8 @@ public class GraphicsLoader : MonoBehaviour
 	System.UInt32 index = 0;
 	System.UInt32 graphicsCount;
 
+	float time;
+
 	private void Start()
 	{
 		m_graphicsData = new SortedDictionary<System.UInt32, Data>();
@@ -53,6 +55,8 @@ public class GraphicsLoader : MonoBehaviour
 
 		graphicsCount = br.ReadUInt32();
 		Debug.Log($"[GraphicsLoader] graphicsCount: {graphicsCount}");
+
+		time = Time.realtimeSinceStartup;
 	}
 
     private void Update()
@@ -121,6 +125,8 @@ public class GraphicsLoader : MonoBehaviour
 		else
         {
 			done = true;
+			float loadTime = time - Time.realtimeSinceStartup;
+			Debug.Log($"Graphics Loaded in {loadTime} seconds.");
 			Destroy(gameObject);
 		}
 	}

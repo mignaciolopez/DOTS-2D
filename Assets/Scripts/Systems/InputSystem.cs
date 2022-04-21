@@ -14,8 +14,6 @@ public class InputSystem : ComponentSystem
         {
             translation.Value.x += Input.GetAxisRaw("Horizontal") * speed.Value * Time.DeltaTime;
             translation.Value.y += Input.GetAxisRaw("Vertical") * speed.Value * Time.DeltaTime;
-
-            Camera.main.transform.position = translation.Value + camera.offset;
         });
     }
 }

@@ -67,22 +67,36 @@ public class GameGraphics : MonoBehaviour
         }
 
         startTime = Time.realtimeSinceStartup;
+
         taskStartTime = Time.realtimeSinceStartup;
-        StartCoroutine(LoadIndex());
+        if (!LoadIndex())
+            return;
+
+        taskStartTime = Time.realtimeSinceStartup;
+        if (!LoadTextures())
+            return;
+
+        /*
+        taskStartTime = Time.realtimeSinceStartup;
+        if (!LoadSprites())
+            return;
+        /*
+        taskStartTime = Time.realtimeSinceStartup;
+        if (!LoadAnimations())
+            return;
+        */
+
+        MeasureOverallTime();
     }
 
-    private IEnumerator MeasureOverallTime()
+    private void MeasureOverallTime()
     {
-        yield return new WaitForSeconds(0f);
-
         float loadTime = Time.realtimeSinceStartup - startTime;
         Debug.Log($"Overall Load time: {loadTime.ToString("F2")}s.");
     }
 
-    private IEnumerator LoadIndex()
-    {
-        yield return new WaitForSeconds(0f);
-
+    private bool LoadIndex()
+    { 
         int fileVersion = br.ReadInt32();
         Debug.Log($"FileVersion: {fileVersion}");
 
@@ -153,14 +167,11 @@ public class GameGraphics : MonoBehaviour
         float loadTime = Time.realtimeSinceStartup - taskStartTime;
         Debug.Log($"Index Load time: {loadTime.ToString("F2")}s.");
 
-        taskStartTime = Time.realtimeSinceStartup;
-        StartCoroutine(LoadTextures());
+        return true;
     }
 
-    private IEnumerator LoadTextures()
+    private bool LoadTextures()
     {
-        yield return new WaitForSeconds(0f);
-
         textures = new SortedDictionary<System.UInt32, Texture2D>();
 
         foreach (KeyValuePair<System.UInt32, IndexData> indexData in indexes)
@@ -177,23 +188,23 @@ public class GameGraphics : MonoBehaviour
         }
 
         if (textures.Count < 1)
+        {
             Debug.LogError("Error Loading Textures");
+            return false;
+        }
         else
         {
             float loadTime = Time.realtimeSinceStartup - taskStartTime;
             Debug.Log(
                 $"Textures Count {textures.Count} \n" +
                 $"Textures Load time: {loadTime.ToString("F2")}s.");
-
-            taskStartTime = Time.realtimeSinceStartup;
-            StartCoroutine(LoadSprites());
         }
+
+        return true;
     }
 
-    private IEnumerator LoadSprites()
+    private bool LoadSprites()
     {
-        yield return new WaitForSeconds(0f);
-
         sprites = new List<Sprite>();
 
         foreach(KeyValuePair<System.UInt32, IndexData> indexData in indexes)
@@ -217,23 +228,23 @@ public class GameGraphics : MonoBehaviour
         }
 
         if (sprites.Count < 1)
+        {
             Debug.LogError("Error Creating Sprites");
+            return false;
+        }
         else
         {
             float loadTime = Time.realtimeSinceStartup - taskStartTime;
             Debug.Log(
                 $"Sprites Count {sprites.Count} \n" +
                 $"Sprites Creation time: {loadTime.ToString("F2")}s.");
-
-            taskStartTime = Time.realtimeSinceStartup;
-            StartCoroutine(LoadAnimations());
         }
+
+        return true;
     }
 
-    private IEnumerator LoadAnimations()
+    private bool LoadAnimations()
     {
-        yield return new WaitForSeconds(0f);
-
         animations = new List<Animation>();
 
         foreach (KeyValuePair<System.UInt32, IndexData> indexData in indexes)
@@ -246,7 +257,10 @@ public class GameGraphics : MonoBehaviour
         }
 
         if (animations.Count < 1)
+        {
             Debug.LogWarning("No Animations Created");
+            return false;
+        }
         else
         {
             float loadTime = Time.realtimeSinceStartup - taskStartTime;
@@ -255,6 +269,6 @@ public class GameGraphics : MonoBehaviour
                 $"Animation Clips Creation time: {loadTime.ToString("F2")}s.");
         }
 
-        StartCoroutine(MeasureOverallTime());
+        return true;
     }
 }

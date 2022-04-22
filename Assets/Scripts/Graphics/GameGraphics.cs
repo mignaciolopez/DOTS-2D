@@ -7,16 +7,16 @@ public class GameGraphics : MonoBehaviour
 {
     public static GameGraphics instance { private set; get; }
 
-    SortedDictionary<System.UInt32, IndexData> indexes;
+    public SortedDictionary<System.UInt32, IndexData> indexes;
     SortedDictionary<System.UInt32, Texture2D> textures;
     
-    [HideInInspector]
-    public List<Sprite> sprites;
+    public SortedDictionary<System.UInt32, Sprite> sprites;
 
-    [HideInInspector]
-    public List<Animation> animations;
+    public Dictionary<System.UInt32, List<Sprite>> spriteFrames;
 
-    struct IndexData
+    public List<System.UInt32> animationList;
+
+    public struct IndexData
     {
         public System.UInt32 id;
 
@@ -76,15 +76,15 @@ public class GameGraphics : MonoBehaviour
         if (!LoadTextures())
             return;
 
-        /*
+        
         taskStartTime = Time.realtimeSinceStartup;
         if (!LoadSprites())
             return;
-        /*
+        
         taskStartTime = Time.realtimeSinceStartup;
         if (!LoadAnimations())
             return;
-        */
+
 
         MeasureOverallTime();
     }
@@ -205,9 +205,9 @@ public class GameGraphics : MonoBehaviour
 
     private bool LoadSprites()
     {
-        sprites = new List<Sprite>();
+        sprites = new SortedDictionary<System.UInt32, Sprite>();
 
-        foreach(KeyValuePair<System.UInt32, IndexData> indexData in indexes)
+        foreach (KeyValuePair<System.UInt32, IndexData> indexData in indexes)
         {
             Rect rect = new Rect(indexData.Value.startX, indexData.Value.startY, indexData.Value.width, indexData.Value.height);
             //Vector2 pivot = new Vector2(rect.width / 2f, rect.height / 2f);
@@ -218,7 +218,7 @@ public class GameGraphics : MonoBehaviour
             if (sprite)
             {
                 sprite.name = "Sprite_" + indexData.Value.id.ToString();
-                sprites.Add(sprite);
+                sprites.Add(indexData.Key, sprite);
             }
             else
                 Debug.LogWarning(
@@ -245,28 +245,34 @@ public class GameGraphics : MonoBehaviour
 
     private bool LoadAnimations()
     {
-        animations = new List<Animation>();
+        spriteFrames = new Dictionary<System.UInt32, List<Sprite>>();
 
         foreach (KeyValuePair<System.UInt32, IndexData> indexData in indexes)
         {
             if (indexData.Value.frames.Count < 2)
                 continue;
 
-            //Animation animation = new Animation();
-            
+            List<Sprite> frames = new List<Sprite>();
+            foreach (System.UInt32 id in indexData.Value.frames)
+            {
+                frames.Add(sprites[id]);
+            }
+
+            spriteFrames.Add(indexData.Key, frames);
+            animationList.Add(indexData.Key);
         }
 
-        if (animations.Count < 1)
+        if (spriteFrames.Count < 1)
         {
-            Debug.LogWarning("No Animations Created");
+            Debug.LogWarning("No Animation Frames Created");
             return false;
         }
         else
         {
             float loadTime = Time.realtimeSinceStartup - taskStartTime;
             Debug.Log(
-                $"Animation Clips Count {animations.Count} \n" +
-                $"Animation Clips Creation time: {loadTime.ToString("F2")}s.");
+                $"Animation Frames Count {spriteFrames.Count} \n" +
+                $"Animation Frames Creation time: {loadTime.ToString("F2")}s.");
         }
 
         return true;
